@@ -21,8 +21,8 @@ app.use(upload.array());
 app.use(cookieParser());
 app.use(session({secret: "Shh,  its a secret"}));
 
-var Users = [{id:'zeel',password:'asdf'}];
-
+var Users = [];
+var flag = false;
 app.get('/signup',function(req,res){
     res.render('signup');
 });
@@ -38,15 +38,21 @@ app.post('/signup',function(req,res){
                 res.render('signup',{
                     message: "User Already Exists! Login or choose another user id"
                 });
+                flag = true;
             
                 
             }            
         });
-        console.log(Users);
-        // var newUser = { id: req.body.id, password: req.body.password};
-        // Users.push(newUser);
-        // req.session.user = newUser;
-        // res.redirect('/protected_page');
+        if(flag === false){
+            var newUser = {id: req.body.id, password: req.body.password};
+            Users.push(newUser);
+            req.session.user = newUser;
+            res.redirect('/protected_page');
+            }
+            else{
+                flag = false;
+            }
+        
     }
 
 });
@@ -58,6 +64,7 @@ function checkSignIn(req,res,next){
     else{
         var err = new Error("Not logged in");
         console.log(req.session.user);
+        
         next(err);
     }
 }   
@@ -80,13 +87,18 @@ app.post('/login',function(req,res){
         Users.filter(function(user){
             if(user.id === req.body.id && user.password === req.body.password){
                 req.session.user = user;
-                console.log("in post login");
+                flag = true;
                 res.redirect('/protected_page');
-                return;
+              
             }
             
         });
+        if(flag === false){
         res.render('login', {message: "Invalid credentials"});
+        }
+        else{
+            flag = false;
+        }
     }
 });
 
@@ -98,7 +110,7 @@ app.get('/logout',function(req,res){
 });
 
 app.use('/protected_page', function(err,req,res,next){
-    console.log(err);
+    // console.log(err);
 
     res.redirect('/login');
 });
